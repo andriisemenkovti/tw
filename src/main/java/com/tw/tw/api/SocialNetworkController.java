@@ -5,7 +5,6 @@ import com.tw.tw.posting.PostDTO;
 import com.tw.tw.posting.PostingAPI;
 import com.tw.tw.posting.UserDTO;
 import com.tw.tw.timeline.TimelineService;
-import com.tw.tw.wall.WallEmptyException;
 import com.tw.tw.wall.WallService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,13 +48,10 @@ public class SocialNetworkController {
      */
     @GetMapping(PATH + "/wall")
     public Flux<PostDTO> wall(@RequestParam String userName) {
-        try {
-            return wallService.getCurrentUserPosts(userName)
-                    .log();
-        } catch (WallEmptyException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
-
+        return wallService.getCurrentUserPosts(userName)
+                .doOnError(throwable ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, throwable.getMessage()))
+                .log();
     }
 
     /**
